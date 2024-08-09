@@ -22,7 +22,7 @@
    - Specify the list of domains to be scanned in the `domains` variable.
    - Run the script using the command:
      ```bash
-     python3 your_script.py
+     python3 Telegram_Automated_Vulnerability_Bot.py
      ```
 
 4. **How the Script Works**:
@@ -36,7 +36,7 @@
      ```
    - Add the following line to execute the script every day at 2:00 AM:
      ```
-     0 2 * * * /usr/bin/python3 /path/to/your_script.py
+     0 2 * * * /usr/bin/python3 /path/to/Telegram_Automated_Vulnerability_Bot.py
      ```
 
 6. **Notes**:
