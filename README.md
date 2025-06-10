@@ -1,134 +1,306 @@
-# 📄 **README**
+# 🛡️ Security Scanner v2.0
 
-## 🛠️ **Instructions for Use**
+Автоматизированный сканер безопасности для обнаружения субдоменов, открытых портов и уязвимостей с интеграцией Telegram для отчетности.
 
-### Prerequisites
+## 📋 Описание
 
-1. **🐍 Python 3**: Ensure that Python 3 is installed on your system.
-2. **📦 Python Libraries**: Install the required Python libraries using the following command:
-   ```bash
-   pip install requests urllib3
-   ```
-3. **🖥️ Nmap**: Install Nmap, a network scanning utility, which is mandatory for checking open ports on subdomains.
-   ```bash
-   # For Debian/Ubuntu
-   sudo apt-get install nmap
-   ```
-4. **🔍 Nuclei**: Install Nuclei, a vulnerability scanning tool based on templates. It is mandatory for vulnerability scanning. Also, regularly update Nuclei templates:
-   ```bash
-   # Install Nuclei
-   go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
+Security Scanner - это Python-приложение, которое автоматически:
+- Находит субдомены для указанных доменов
+- Проверяет их доступность
+- Сканирует открытые порты
+- Ищет уязвимости безопасности
+- Генерирует детальные HTML отчеты
+- Отправляет результаты в Telegram
 
-   # Add Nuclei to PATH
-   export PATH=$PATH:$(go env GOPATH)/bin
+## 🚀 Возможности
 
-   # Update Nuclei templates
-   nuclei -update-templates
-   ```
-5. **🔎 Subfinder**: Install Subfinder, a subdomain discovery tool. It is mandatory for discovering subdomains.
-   ```bash
-   # Install Subfinder
-   go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+- **Поиск субдоменов** с использованием Subfinder
+- **Сканирование портов** через Nmap
+- **Поиск уязвимостей** с помощью Nuclei
+- **Отслеживание изменений** между сканированиями
+- **HTML отчеты** с современным дизайном
+- **Telegram интеграция** для мгновенных уведомлений
+- **Архивирование результатов** в ZIP формате
 
-   # Add Subfinder to PATH
-   export PATH=$PATH:$(go env GOPATH)/bin
-   ```
-6. **💻 Go Language**: Since Nuclei and Subfinder are written in Go, ensure that Go is installed on your system.
-   ```bash
-   # For Debian/Ubuntu
-   sudo apt-get install golang
-   ```
-7. **🔐 Telegram API Access**: Create a Telegram bot and obtain the API token.
+## 📦 Требования
 
-### ⚙️ **Environment Setup**
+### Системные зависимости
 
-1. **🤖 Telegram Bot**: Create a bot in Telegram and get the token through [BotFather](https://core.telegram.org/bots#6-botfather).
-2. **🆔 Chat ID**: Find the ID of the group or chat where the bot will send scan results. You can use the `getUpdates` API or bots like [IDBot](https://t.me/myidbot) to retrieve the group or chat ID.
-3. **📝 Script Configuration**:
-    - **Clone or Download the Script**: Save the script file as `script_scan_subdomain.py`.
-    - **Edit the Script**:
-      - Open the script file in a text editor.
-      - Replace the values in the following lines with your own tokens and chat ID:
-        ```python
-        # Your Tokens and Chat ID
-        telegram_token = 'your_telegram_bot_token'  # Replace with your Telegram bot token
-        chat_id = 'your_chat_id'  # Replace with your Telegram group or chat ID
-        ```
-      - Replace the domains in the `domains` list with the ones you want to scan:
-        ```python
-        domains = ['example1.com', 'example2.com', 'example3.com']  # Replace with your target domains
-        ```
+```bash
+# Ubuntu/Debian
+sudo apt update && sudo apt install -y python3 python3-pip nmap
 
-### ▶️ **Script Execution**
+# CentOS/RHEL
+sudo yum install -y python3 python3-pip nmap
+```
 
-1. **🔍 Verify Domains**: Ensure that the list of domains to be scanned is correctly set in the `domains` variable.
-2. **🚀 Run the Script**:
-   ```bash
-   python3 script_scan_subdomain.py
-   ```
-   - The script will perform the following actions:
-     - Discover subdomains using Subfinder.
-     - Check the availability of each subdomain.
-     - Scan open ports using Nmap.
-     - Scan for vulnerabilities using Nuclei.
-     - Generate an HTML report with the findings.
-     - Send a summary message and the detailed HTML report to your specified Telegram chat.
+### Python зависимости
 
-### 🛠️ **How the Script Works**
+```bash
+pip3 install requests urllib3
+```
 
-- **Subdomain Discovery**: Uses Subfinder to find subdomains for each specified domain.
-- **Availability Check**: Verifies if the subdomains are accessible over HTTP or HTTPS.
-- **Port Scanning**: Utilizes Nmap to scan common ports on accessible subdomains.
-- **Vulnerability Scanning**: Uses Nuclei with medium, high, and critical severity templates to scan for vulnerabilities on accessible subdomains.
-- **Report Generation**:
-  - **Summary**: A brief summary is sent to Telegram, listing each subdomain with the number of vulnerabilities found and the open ports.
-  - **Detailed Report**: An HTML file containing detailed information about each subdomain is generated and sent to Telegram.
+### Внешние инструменты
 
-### ⏰ **Automating with cron**
+1. **Subfinder** - для поиска субдоменов
+```bash
+# Установка через Go
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 
-To run the script automatically at a specified interval (e.g., every day at 2:00 AM), you can use cron:
+# Или скачать бинарник
+wget https://github.com/projectdiscovery/subfinder/releases/download/v2.6.3/subfinder_2.6.3_linux_amd64.zip
+unzip subfinder_2.6.3_linux_amd64.zip
+sudo mv subfinder /usr/local/bin/
+```
 
-1. **Edit crontab**:
-   ```bash
-   crontab -e
-   ```
-2. **Add Cron Job**:
-   ```bash
-   0 2 * * * /usr/bin/python3 /path/to/script_scan_subdomain.py
-   ```
-   - Replace `/path/to/script_scan_subdomain.py` with the actual path to your script.
-   - This will schedule the script to run daily at 2:00 AM.
+2. **Nuclei** - для поиска уязвимостей
+```bash
+# Установка через Go
+go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
 
-### 📝 **Notes**
+# Или скачать бинарник
+wget https://github.com/projectdiscovery/nuclei/releases/download/v3.0.4/nuclei_3.0.4_linux_amd64.zip
+unzip nuclei_3.0.4_linux_amd64.zip
+sudo mv nuclei /usr/local/bin/
+```
 
-- **Ensure Tools are in PATH**: Make sure that `nuclei` and `subfinder` are accessible from the command line. If not, add their installation directories to your `PATH` environment variable.
-  ```bash
-  export PATH=$PATH:$(go env GOPATH)/bin
-  ```
-- **Update Nuclei Templates Regularly**: For the most accurate and up-to-date vulnerability scanning results, regularly update Nuclei templates:
-  ```bash
-  nuclei -update-templates
-  ```
-- **Permissions**: Ensure the script has execution permissions:
-  ```bash
-  chmod +x script_scan_subdomain.py
-  ```
-- **Dependencies**: All required tools (Nmap, Nuclei, Subfinder) must be installed and properly configured for the script to function correctly.
-- **Legal Considerations**:
-  - **Authorization**: Before scanning any domains, ensure you have explicit permission to do so. Unauthorized scanning may violate laws or regulations.
-  - **Responsible Use**: Use this script responsibly and ethically, adhering to all applicable laws and organizational policies.
+## ⚙️ Настройка
 
-### 📞 **Support**
+### 1. Клонирование репозитория
 
-If you encounter any issues or have questions about the script, feel free to reach out for assistance.
+```bash
+git clone <repository-url>
+cd security-scanner
+```
 
-### 📚 **References**
+### 2. Настройка конфигурации
 
-- **Nmap**: [https://nmap.org/](https://nmap.org/)
-- **Nuclei**: [https://nuclei.projectdiscovery.io/](https://nuclei.projectdiscovery.io/)
-- **Subfinder**: [https://github.com/projectdiscovery/subfinder](https://github.com/projectdiscovery/subfinder)
-- **Telegram Bots Guide**: [https://core.telegram.org/bots](https://core.telegram.org/bots)
+Отредактируйте файл `config.py`:
+
+```python
+# Telegram настройки (обязательно!)
+TELEGRAM_TOKEN = 'YOUR_BOT_TOKEN'
+CHAT_ID = 'YOUR_CHAT_ID'
+
+# Домены для сканирования
+DOMAINS = [
+    'example.com',
+    'yourdomain.com',
+    'anotherdomain.com'
+]
+
+# Порты для сканирования
+PORTS = "22,23,25,53,80,110,443,445,3306,3389,5900,8080,8443,9090"
+
+# Уровни критичности уязвимостей
+SEVERITY_LEVELS = "medium,high,critical"
+```
+
+### 3. Создание Telegram бота
+
+1. Найдите [@BotFather](https://t.me/BotFather) в Telegram
+2. Создайте нового бота: `/newbot`
+3. Получите токен бота
+4. Узнайте ваш Chat ID:
+   - Отправьте сообщение боту
+   - Перейдите по ссылке: `https://api.telegram.org/bot<TOKEN>/getUpdates`
+   - Найдите `chat.id` в ответе
+
+## 🏃‍♂️ Запуск
+
+### Простой запуск
+
+```bash
+python3 main.py
+```
+
+### Запуск через cron (автоматизация)
+
+```bash
+# Редактирование crontab
+crontab -e
+
+# Добавить строку для ежедневного запуска в 2:00
+0 2 * * * cd /path/to/security-scanner && python3 main.py >> /var/log/security-scanner.log 2>&1
+```
+
+### Запуск в Docker
+
+```dockerfile
+FROM python:3.9-slim
+
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y \
+    nmap \
+    wget \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Установка Subfinder
+RUN wget https://github.com/projectdiscovery/subfinder/releases/download/v2.6.3/subfinder_2.6.3_linux_amd64.zip \
+    && unzip subfinder_2.6.3_linux_amd64.zip \
+    && mv subfinder /usr/local/bin/ \
+    && rm subfinder_2.6.3_linux_amd64.zip
+
+# Установка Nuclei
+RUN wget https://github.com/projectdiscovery/nuclei/releases/download/v3.0.4/nuclei_3.0.4_linux_amd64.zip \
+    && unzip nuclei_3.0.4_linux_amd64.zip \
+    && mv nuclei /usr/local/bin/ \
+    && rm nuclei_3.0.4_linux_amd64.zip
+
+WORKDIR /app
+COPY . .
+
+RUN pip install requests urllib3
+
+CMD ["python3", "main.py"]
+```
+
+## 📁 Структура проекта
+
+```
+security-scanner/
+├── main.py              # Главный файл приложения
+├── config.py            # Конфигурационные настройки
+├── scanner.py           # Функции сканирования
+├── report.py            # Генерация HTML отчетов
+├── utils.py             # Вспомогательные функции
+├── data/                # Данные о предыдущих сканированиях
+├── reports/             # Временные HTML отчеты
+└── scan_log.log         # Лог файл
+```
+
+## 📊 Пример вывода
+
+```
+============================================================
+🛡️  SECURITY SCANNER v2.0
+📅 Начало сканирования: 2024-06-10 14:30:00
+🎯 Домены для сканирования: 2
+   • example.com
+   • testdomain.com
+============================================================
+
+🔍 Сканирование домена: example.com
+
+   📡 Поиск субдоменов для example.com...
+   ✅ Найдено субдоменов: 15
+
+📊 Общая статистика субдоменов:
+   📁 Предыдущих субдоменов: 12
+   📁 Текущих субдоменов: 15
+   🆕 Новых найденных: 3
+
+🔍 Проверка доступности субдоменов...
+
+   [1/15] Проверка: www.example.com
+      ✅ Доступен
+      🔍 Сканирование портов...
+      📡 Открытых портов: 3
+      🔍 Поиск уязвимостей...
+      ⚠️ Найдено уязвимостей: 2
+
+📦 Создание архива с отчетами...
+📨 Отправка отчета в Telegram...
+
+✅ Сканирование завершено успешно!
+```
+
+## 📝 Логирование
+
+Все события записываются в файл `scan_log.log`:
+
+```
+2024-06-10 14:30:15 INFO: Найдено 15 субдоменов для example.com
+2024-06-10 14:30:20 INFO: Запуск Nmap сканирования для www.example.com
+2024-06-10 14:30:25 INFO: Запуск Nuclei сканирования для www.example.com
+2024-06-10 14:35:00 INFO: Сообщение успешно отправлено в Telegram
+```
+
+## 🔧 Возможные проблемы и решения
+
+### Ошибка: "Subfinder not found"
+```bash
+# Проверьте установку
+which subfinder
+# Если не найден, установите заново или обновите PATH
+```
+
+### Ошибка: "Permission denied" для Nmap
+```bash
+# Запустите с правами sudo или настройте capabilities
+sudo setcap cap_net_raw,cap_net_admin,cap_net_bind_service+eip /usr/bin/nmap
+```
+
+### Telegram бот не отвечает
+- Проверьте правильность токена
+- Убедитесь, что бот добавлен в чат
+- Проверьте Chat ID
+
+### Высокое потребление ресурсов
+```python
+# В config.py уменьшите количество портов или измените severity
+PORTS = "80,443,22"  # Только основные порты
+SEVERITY_LEVELS = "high,critical"  # Только критичные уязвимости
+```
+
+## 🔒 Безопасность
+
+- Храните `config.py` в безопасности (содержит токены)
+- Используйте переменные окружения для чувствительных данных:
+
+```python
+import os
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN', 'default_token')
+```
+
+- Ограничьте права доступа к файлам:
+
+```bash
+chmod 600 config.py
+chmod 644 *.py
+```
+
+## 📈 Расширение функциональности
+
+### Добавление новых источников субдоменов
+
+```python
+# В scanner.py добавьте функцию для Amass
+def get_subdomains_amass(domain):
+    command = ['amass', 'enum', '-d', domain]
+    # ... реализация
+```
+
+### Кастомные уведомления
+
+```python
+# В utils.py добавьте поддержку Slack/Discord
+def send_slack_message(message, webhook_url):
+    # ... реализация
+```
+
+## 🤝 Вклад в проект
+
+1. Форкните репозиторий
+2. Создайте ветку для новой функции (`git checkout -b feature/new-feature`)
+3. Зафиксируйте изменения (`git commit -am 'Add new feature'`)
+4. Отправьте в ветку (`git push origin feature/new-feature`)
+5. Создайте Pull Request
+
+
+
+## ⚠️ Дисклеймер
+
+Используйте этот инструмент только для тестирования собственных ресурсов или с письменного разрешения владельца. Авторы не несут ответственности за неправомерное использование.
+
+## 📞 Поддержка
+
+При возникновении проблем:
+1. Проверьте раздел "Возможные проблемы"
+2. Изучите лог файлы
+3. Создайте issue в репозитории
 
 ---
 
-**Disclaimer**: This script is intended for authorized security testing and educational purposes only. Unauthorized use of this script against systems you do not own or have explicit permission to test is illegal and unethical.
+**Security Scanner v2.0** - Ваш надежный помощник в обеспечении безопасности! 🛡️
