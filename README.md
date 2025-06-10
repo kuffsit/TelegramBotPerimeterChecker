@@ -123,6 +123,37 @@ crontab -e
 # Добавить строку для ежедневного запуска в 2:00
 0 2 * * * cd /path/to/security-scanner && python3 main.py >> /var/log/security-scanner.log 2>&1
 ```
+
+### Запуск в Docker
+
+```dockerfile
+FROM python:3.9-slim
+
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y \
+    nmap \
+    wget \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Установка Subfinder
+RUN wget https://github.com/projectdiscovery/subfinder/releases/download/v2.6.3/subfinder_2.6.3_linux_amd64.zip \
+    && unzip subfinder_2.6.3_linux_amd64.zip \
+    && mv subfinder /usr/local/bin/ \
+    && rm subfinder_2.6.3_linux_amd64.zip
+
+# Установка Nuclei
+RUN wget https://github.com/projectdiscovery/nuclei/releases/download/v3.0.4/nuclei_3.0.4_linux_amd64.zip \
+    && unzip nuclei_3.0.4_linux_amd64.zip \
+    && mv nuclei /usr/local/bin/ \
+    && rm nuclei_3.0.4_linux_amd64.zip
+
+WORKDIR /app
+COPY . .
+
+RUN pip install requests urllib3
+
+CMD ["python3", "main.py"]
 ```
 
 ## 📁 Структура проекта
