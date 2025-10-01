@@ -4,7 +4,7 @@
 FastAPI приложение для управления сканером безопасности
 """
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.security import OAuth2PasswordRequestForm
@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 import os
 import sys
+from .i18n import i18n
 
 # Добавляем родительскую директорию в путь для импорта модулей сканера
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -28,7 +29,7 @@ from backend.app.geolocation_service import geolocation_service
 from backend.app.auth import (
     authenticate_user, create_access_token, get_current_active_user,
     get_current_admin_user, get_password_hash, create_default_admin,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user_by_token_or_api_key
 )
 
 # Создание таблиц в БД
@@ -45,8 +46,8 @@ finally:
 scheduler_service.load_all_schedules()
 
 app = FastAPI(
-    title="API сканера безопасности",
-    description="API для управления сканированием безопасности",
+    title="Security Scanner API",
+    description="API for security scanning management",
     version="2.0.0"
 )
 
@@ -58,6 +59,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Middleware для установки языка
+@app.middleware("http")
+async def set_language_middleware(request: Request, call_next):
+    # Устанавливаем русский язык по умолчанию
+    i18n.set_language("ru")
+    
+    response = await call_next(request)
+    return response
 
 scanner_service = ScannerService()
 
@@ -87,6 +97,14 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat()
+    }
+
+@app.get("/api/languages")
+async def get_languages():
+    """Получение доступных языков"""
+    return {
+        "languages": i18n.get_available_languages(),
+        "current": i18n.current_language
     }
 
 # ==================== AUTH ====================
@@ -1140,6 +1158,104 @@ async def get_ip_geolocation(
             raise HTTPException(status_code=404, detail="Геолокация не найдена")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# ==================== API KEYS ENDPOINTS ====================
+
+@app.get("/api/api-keys", response_model=List[schemas.ApiKey])
+async def get_api_keys(
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Получить список API ключей пользователя"""
+    api_keys = db.query(models.ApiKey).filter(
+        models.ApiKey.user_id == current_user.id
+    ).order_by(models.ApiKey.created_at.desc()).all()
+    return api_keys
+
+
+@app.post("/api/api-keys", response_model=schemas.ApiKeyWithKey)
+async def create_api_key(
+    api_key_data: schemas.ApiKeyCreate,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Создать новый API ключ"""
+    # Генерируем новый ключ
+    key = models.ApiKey.generate_key()
+    key_hash = models.ApiKey.hash_key(key)
+    
+    # Создаем запись в БД
+    db_api_key = models.ApiKey(
+        name=api_key_data.name,
+        key_hash=key_hash,
+        expires_at=api_key_data.expires_at,
+        user_id=current_user.id
+    )
+    
+    db.add(db_api_key)
+    db.commit()
+    db.refresh(db_api_key)
+    
+    # Возвращаем ключ с самим ключом (только один раз)
+    return schemas.ApiKeyWithKey(
+        id=db_api_key.id,
+        name=db_api_key.name,
+        is_active=db_api_key.is_active,
+        created_at=db_api_key.created_at,
+        last_used=db_api_key.last_used,
+        user_id=db_api_key.user_id,
+        expires_at=db_api_key.expires_at,
+        key=key
+    )
+
+
+@app.put("/api/api-keys/{key_id}", response_model=schemas.ApiKey)
+async def update_api_key(
+    key_id: int,
+    api_key_data: schemas.ApiKeyUpdate,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Обновить API ключ"""
+    api_key = db.query(models.ApiKey).filter(
+        models.ApiKey.id == key_id,
+        models.ApiKey.user_id == current_user.id
+    ).first()
+    
+    if not api_key:
+        raise HTTPException(status_code=404, detail="API ключ не найден")
+    
+    if api_key_data.name is not None:
+        api_key.name = api_key_data.name
+    if api_key_data.is_active is not None:
+        api_key.is_active = api_key_data.is_active
+    if api_key_data.expires_at is not None:
+        api_key.expires_at = api_key_data.expires_at
+    
+    db.commit()
+    db.refresh(api_key)
+    return api_key
+
+
+@app.delete("/api/api-keys/{key_id}")
+async def delete_api_key(
+    key_id: int,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Удалить API ключ"""
+    api_key = db.query(models.ApiKey).filter(
+        models.ApiKey.id == key_id,
+        models.ApiKey.user_id == current_user.id
+    ).first()
+    
+    if not api_key:
+        raise HTTPException(status_code=404, detail="API ключ не найден")
+    
+    db.delete(api_key)
+    db.commit()
+    return {"message": "API ключ удален"}
+
 
 @app.on_event("shutdown")
 async def shutdown_event():

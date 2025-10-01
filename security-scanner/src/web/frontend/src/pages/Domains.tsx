@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, Edit, Trash2, Play, Pause } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { api } from '../services/api'
 
 interface Domain {
@@ -12,6 +13,7 @@ interface Domain {
 }
 
 export default function Domains() {
+  const { t } = useTranslation()
   const [domains, setDomains] = useState<Domain[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -108,7 +110,7 @@ export default function Domains() {
               onClick={() => setShowAddModal(true)}
               className="btn btn-primary"
             >
-              Добавить первый домен
+              {t('common.add')} первый домен
             </button>
           </div>
         ) : (
@@ -148,7 +150,7 @@ export default function Domains() {
                     <button
                       onClick={() => setEditingDomain(domain)}
                       className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
-                      title="Редактировать"
+                      title={t('common.edit')}
                     >
                       <Edit className="w-4 h-4" />
                     </button>
@@ -159,7 +161,7 @@ export default function Domains() {
                     <button
                       onClick={() => handleDeleteDomain(domain.id)}
                       className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                      title="Удалить"
+                      title={t('common.delete')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -193,6 +195,7 @@ export default function Domains() {
 
 // Компонент модального окна добавления домена
 function AddDomainModal({ onClose, onSave }: { onClose: () => void; onSave: (data: any) => void }) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({ name: '', description: '' })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -205,12 +208,12 @@ function AddDomainModal({ onClose, onSave }: { onClose: () => void; onSave: (dat
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-dark-700 rounded-2xl p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold text-white mb-4">Добавить домен</h2>
+        <h2 className="text-xl font-semibold text-white mb-4">{t('domains.add_domain')}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Имя домена *
+              {t('domains.domain_name')} *
             </label>
             <input
               type="text"
@@ -224,22 +227,22 @@ function AddDomainModal({ onClose, onSave }: { onClose: () => void; onSave: (dat
           
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Описание
+              {t('domains.description')}
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="input w-full h-20 resize-none"
-              placeholder="Описание домена (необязательно)"
+              placeholder={t('domains.description_placeholder')}
             />
           </div>
           
           <div className="flex space-x-3 pt-4">
             <button type="submit" className="btn btn-primary flex-1">
-              Добавить
+              {t('common.add')}
             </button>
             <button type="button" onClick={onClose} className="btn btn-secondary flex-1">
-              Отмена
+              {t('common.cancel')}
             </button>
           </div>
         </form>
@@ -254,6 +257,7 @@ function EditDomainModal({ domain, onClose, onSave }: {
   onClose: () => void; 
   onSave: (data: any) => void 
 }) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     name: domain.name,
     description: domain.description || '',
@@ -268,12 +272,12 @@ function EditDomainModal({ domain, onClose, onSave }: {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-dark-700 rounded-2xl p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold text-white mb-4">Редактировать домен</h2>
+        <h2 className="text-xl font-semibold text-white mb-4">{t('domains.edit_domain')}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Имя домена *
+              {t('domains.domain_name')} *
             </label>
             <input
               type="text"
@@ -286,7 +290,7 @@ function EditDomainModal({ domain, onClose, onSave }: {
           
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Описание
+              {t('domains.description')}
             </label>
             <textarea
               value={formData.description}
@@ -304,16 +308,16 @@ function EditDomainModal({ domain, onClose, onSave }: {
               className="w-4 h-4 text-primary-600 bg-dark-800 border-dark-500 rounded focus:ring-primary-500"
             />
             <label htmlFor="is_active" className="text-sm font-medium text-gray-300">
-              Активен для сканирования
+              {t('domains.active_for_scanning')}
             </label>
           </div>
           
           <div className="flex space-x-3 pt-4">
             <button type="submit" className="btn btn-primary flex-1">
-              Сохранить
+              {t('common.save')}
             </button>
             <button type="button" onClick={onClose} className="btn btn-secondary flex-1">
-              Отмена
+              {t('common.cancel')}
             </button>
           </div>
         </form>

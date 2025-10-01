@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Play, Eye, RefreshCw, Info, FileText, FileSpreadsheet, File, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { api } from '../services/api'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
@@ -29,6 +30,7 @@ interface Domain {
 }
 
 export default function Scans() {
+  const { t } = useTranslation()
   const [scans, setScans] = useState<Scan[]>([])
   const [domains, setDomains] = useState<Domain[]>([])
   const [loading, setLoading] = useState(true)
@@ -266,7 +268,7 @@ export default function Scans() {
             <button
               onClick={() => handleExport('pdf')}
               className="btn btn-secondary flex items-center space-x-2"
-              title="Экспорт в PDF"
+              title={t('common.export_pdf')}
             >
               <FileText className="w-4 h-4" />
               <span>PDF</span>
@@ -274,7 +276,7 @@ export default function Scans() {
             <button
               onClick={() => handleExport('excel')}
               className="btn btn-secondary flex items-center space-x-2"
-              title="Экспорт в Excel"
+              title={t('common.export_excel')}
             >
               <FileSpreadsheet className="w-4 h-4" />
               <span>Excel</span>
@@ -282,7 +284,7 @@ export default function Scans() {
             <button
               onClick={() => handleExport('csv')}
               className="btn btn-secondary flex items-center space-x-2"
-              title="Экспорт в CSV"
+              title={t('common.export_csv')}
             >
               <File className="w-4 h-4" />
               <span>CSV</span>
@@ -394,7 +396,7 @@ export default function Scans() {
                     <button
                       onClick={() => handleShowProgress(scan.id)}
                       className="p-2 text-purple-400 hover:bg-purple-500/20 rounded-lg transition-colors"
-                      title="Показать прогресс"
+                      title={t('scans.show_progress')}
                     >
                       <Info className="w-4 h-4" />
                     </button>
@@ -403,7 +405,7 @@ export default function Scans() {
                       <button
                         onClick={() => handleViewReport(scan.id)}
                         className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
-                        title="Просмотреть отчет"
+                        title={t('scans.view_report')}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -414,7 +416,7 @@ export default function Scans() {
                       <button
                         onClick={() => handleDeleteScan(scan.id)}
                         className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                        title="Удалить сканирование"
+                        title={t('scans.delete_scan')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

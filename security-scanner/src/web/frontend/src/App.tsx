@@ -12,6 +12,7 @@ import Geolocation from './pages/Geolocation'
 import Updates from './pages/Updates'
 import Users from './pages/Users'
 import Settings from './pages/Settings'
+import ApiKeys from './pages/ApiKeys'
 
 function App() {
   return (
@@ -43,6 +44,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <Scheduler />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/api-keys" element={
+          <ProtectedRoute>
+            <Layout>
+              <ApiKeys />
             </Layout>
           </ProtectedRoute>
         } />

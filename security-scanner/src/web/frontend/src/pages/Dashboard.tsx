@@ -7,6 +7,7 @@ import {
   Activity,
   TrendingUp
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { api } from '../services/api'
 import StatCard from '../components/StatCard'
 import RecentScans from '../components/RecentScans'
@@ -28,6 +29,7 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -73,25 +75,25 @@ export default function Dashboard() {
       {/* Статистические карточки */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Всего доменов"
+          title={t('dashboard.total_domains')}
           value={stats.total_domains}
           icon={Globe}
           color="blue"
         />
         <StatCard
-          title="Активных доменов"
+          title={t('dashboard.active_domains')}
           value={stats.active_domains}
           icon={CheckCircle}
           color="green"
         />
         <StatCard
-          title="Всего сканирований"
+          title={t('dashboard.total_scans')}
           value={stats.total_scans}
           icon={Search}
           color="purple"
         />
         <StatCard
-          title="Уязвимостей за месяц"
+          title={t('dashboard.monthly_vulnerabilities')}
           value={stats.recent_vulnerabilities}
           icon={AlertTriangle}
           color="red"

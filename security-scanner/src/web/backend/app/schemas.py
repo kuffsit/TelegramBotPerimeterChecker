@@ -211,3 +211,43 @@ class ScanSchedule(ScanScheduleBase):
     class Config:
         from_attributes = True
 
+
+# ==================== API KEY SCHEMAS ====================
+
+class ApiKeyBase(BaseModel):
+    """Базовая схема API ключа"""
+    name: str = Field(..., description="Название ключа")
+    expires_at: Optional[datetime] = Field(None, description="Дата истечения ключа")
+
+
+class ApiKeyCreate(ApiKeyBase):
+    """Схема для создания API ключа"""
+    pass
+
+
+class ApiKeyUpdate(BaseModel):
+    """Схема для обновления API ключа"""
+    name: Optional[str] = None
+    is_active: Optional[bool] = None
+    expires_at: Optional[datetime] = None
+
+
+class ApiKey(ApiKeyBase):
+    """Схема API ключа с ID и датами"""
+    id: int
+    is_active: bool
+    created_at: datetime
+    last_used: Optional[datetime] = None
+    user_id: int
+    
+    class Config:
+        from_attributes = True
+
+
+class ApiKeyWithKey(ApiKey):
+    """Схема API ключа с самим ключом (только при создании)"""
+    key: str = Field(..., description="Сам API ключ (показывается только один раз)")
+    
+    class Config:
+        from_attributes = True
+

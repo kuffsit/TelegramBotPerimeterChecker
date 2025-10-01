@@ -10,39 +10,44 @@ import {
   GitCompare,
   Clock,
   MapPin,
-  Download
+  Download,
+  Key
 } from 'lucide-react'
 import clsx from 'clsx'
+import { useTranslation } from 'react-i18next'
 
-const navigation = [
-  { name: 'Дашборд', href: '/', icon: LayoutDashboard, roles: ['auditor', 'manager', 'admin'] },
-  { name: 'Домены', href: '/domains', icon: Globe, roles: ['auditor', 'manager', 'admin'] },
-  { name: 'Сканирования', href: '/scans', icon: Search, roles: ['auditor', 'manager', 'admin'] },
-  { name: 'Сравнение', href: '/comparison', icon: GitCompare, roles: ['auditor', 'manager', 'admin'] },
-  { name: 'Статистика по времени', href: '/time-stats', icon: Clock, roles: ['auditor', 'manager', 'admin'] },
-  { name: 'Геолокация', href: '/geolocation', icon: MapPin, roles: ['auditor', 'manager', 'admin'] },
-  { name: 'Планировщик', href: '/scheduler', icon: Calendar, roles: ['manager', 'admin'] },
-  { name: 'Обновления', href: '/updates', icon: Download, roles: ['admin'] },
-  { name: 'Пользователи', href: '/users', icon: Users, roles: ['admin'] },
-  { name: 'Настройки', href: '/settings', icon: Settings, roles: ['admin'] },
+const getNavigation = (t: any) => [
+  { name: t('dashboard.title'), href: '/', icon: LayoutDashboard, roles: ['auditor', 'manager', 'admin'] },
+  { name: t('domains.title'), href: '/domains', icon: Globe, roles: ['auditor', 'manager', 'admin'] },
+  { name: t('scans.title'), href: '/scans', icon: Search, roles: ['auditor', 'manager', 'admin'] },
+  { name: t('common.comparison'), href: '/comparison', icon: GitCompare, roles: ['auditor', 'manager', 'admin'] },
+  { name: t('common.time_statistics'), href: '/time-stats', icon: Clock, roles: ['auditor', 'manager', 'admin'] },
+  { name: t('geolocation.title'), href: '/geolocation', icon: MapPin, roles: ['auditor', 'manager', 'admin'] },
+  { name: t('scheduler.title'), href: '/scheduler', icon: Calendar, roles: ['manager', 'admin'] },
+  { name: t('api_keys.title'), href: '/api-keys', icon: Key, roles: ['auditor', 'manager', 'admin'] },
+  { name: t('common.updates'), href: '/updates', icon: Download, roles: ['admin'] },
+  { name: t('users.title'), href: '/users', icon: Users, roles: ['admin'] },
+  { name: t('settings.title'), href: '/settings', icon: Settings, roles: ['admin'] },
 ]
 
 export default function Sidebar() {
   const location = useLocation()
+  const { t } = useTranslation()
   
   // Получаем информацию о пользователе
   const user = JSON.parse(localStorage.getItem('user') || '{}')
   const userRole = user.role || 'auditor'
 
+  // Фильтруем навигацию по ролям
+  const navigation = getNavigation(t)
+  const filteredNavigation = navigation.filter(item => 
+    item.roles.includes(userRole)
+  )
+
   // Отладочная информация
   console.log('Sidebar - User:', user)
   console.log('Sidebar - User Role:', userRole)
   console.log('Sidebar - Navigation:', navigation)
-
-  // Фильтруем навигацию по ролям
-  const filteredNavigation = navigation.filter(item => 
-    item.roles.includes(userRole)
-  )
   
   console.log('Sidebar - Filtered Navigation:', filteredNavigation)
 

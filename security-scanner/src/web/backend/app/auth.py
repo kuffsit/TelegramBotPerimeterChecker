@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -124,6 +124,78 @@ def get_current_auditor_user(current_user: models.User = Depends(get_current_act
             detail="Not enough permissions"
         )
     return current_user
+
+def get_user_by_api_key(db: Session, api_key: str) -> Optional[models.User]:
+    """Получить пользователя по API ключу"""
+    # Ищем API ключ по хешу
+    api_key_obj = db.query(models.ApiKey).filter(
+        models.ApiKey.key_hash == models.ApiKey.hash_key(api_key),
+        models.ApiKey.is_active == True
+    ).first()
+    
+    if not api_key_obj:
+        return None
+    
+    # Проверяем, не истек ли ключ
+    if api_key_obj.expires_at and api_key_obj.expires_at < datetime.utcnow():
+        return None
+    
+    # Обновляем время последнего использования
+    api_key_obj.last_used = datetime.utcnow()
+    db.commit()
+    
+    return api_key_obj.user
+
+
+def get_current_user_by_token_or_api_key(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db)
+) -> models.User:
+    """Получить текущего пользователя из токена или API ключа"""
+    
+    # Сначала пробуем получить API ключ из заголовка X-API-Key
+    api_key = request.headers.get("X-API-Key")
+    if api_key:
+        user = get_user_by_api_key(db, api_key)
+        if user:
+            return user
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid API key",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    
+    # Если API ключа нет, пробуем JWT токен
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = schemas.TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    
+    user = get_user(db, username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
 
 def create_default_admin(db: Session):
     """Создать администратора по умолчанию"""

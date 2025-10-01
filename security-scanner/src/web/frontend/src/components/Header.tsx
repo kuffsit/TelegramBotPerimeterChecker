@@ -1,8 +1,10 @@
 import { Bell, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 export default function Header() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const handleLogout = () => {
@@ -15,8 +17,8 @@ export default function Header() {
     <header className="bg-dark-800 border-b border-dark-700 px-6 py-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">Панель администрирования</h2>
-          <p className="text-gray-400">Управление сканированием безопасности</p>
+          <h2 className="text-2xl font-bold text-white">{t('app.title')}</h2>
+          <p className="text-gray-400">{t('app.description')}</p>
         </div>
         
         <div className="flex items-center space-x-4">
@@ -29,14 +31,14 @@ export default function Header() {
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="text-sm">
-              <p className="text-white font-medium">{user.username || 'Пользователь'}</p>
+              <p className="text-white font-medium">{user.username || t('common.user')}</p>
               <p className="text-gray-400">{user.email || 'user@example.com'}</p>
             </div>
             <button
               onClick={handleLogout}
               className="text-sm text-gray-400 hover:text-white ml-4"
             >
-              Выйти
+              {t('auth.logout')}
             </button>
           </div>
         </div>

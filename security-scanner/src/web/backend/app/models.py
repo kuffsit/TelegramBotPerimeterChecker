@@ -7,6 +7,8 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime
+import secrets
+import hashlib
 
 from backend.app.database import Base
 
@@ -111,4 +113,35 @@ class ScanSchedule(Base):
     # Создатель
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     creator = relationship("User")
+
+
+class ApiKey(Base):
+    """Модель API ключа"""
+    __tablename__ = "api_keys"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)  # Название ключа для пользователя
+    key_hash = Column(String, unique=True, index=True, nullable=False)  # Хеш ключа
+    is_active = Column(Boolean, default=True)
+    expires_at = Column(DateTime, nullable=True)  # Дата истечения (опционально)
+    last_used = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+    
+    # Владелец ключа
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user = relationship("User")
+    
+    @staticmethod
+    def generate_key() -> str:
+        """Генерация нового API ключа"""
+        return f"sk_{secrets.token_urlsafe(32)}"
+    
+    @staticmethod
+    def hash_key(key: str) -> str:
+        """Хеширование API ключа для безопасного хранения"""
+        return hashlib.sha256(key.encode()).hexdigest()
+    
+    def verify_key(self, key: str) -> bool:
+        """Проверка API ключа"""
+        return self.key_hash == self.hash_key(key)
 
