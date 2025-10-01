@@ -7,7 +7,7 @@
 import os
 
 # Telegram настройки
-TELEGRAM_TOKEN = '7184432111:123AdsaXXXXXXX
+TELEGRAM_TOKEN = '7184432111:123AdsaXXXXXXX'
 CHAT_ID = '-100XXXXXXXXX'
 
 # Пути к утилитам

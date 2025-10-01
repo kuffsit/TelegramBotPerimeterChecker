@@ -426,8 +426,8 @@ def generate_subdomains_section(accessible_subdomains_info):
     html_parts = []
     
     for info in accessible_subdomains_info:
-        subdomain = info['subdomain']
-        open_ports = info['open_ports']
+        subdomain = info['name']
+        open_ports = info['ports']
         vulnerabilities = info['vulnerabilities']
         vuln_count = len(vulnerabilities)
         

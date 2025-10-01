@@ -15,7 +15,7 @@ def get_subdomains(domain, subfinder_path):
     try:
         print(f"   📡 Поиск субдоменов для {domain}...")
         command = [subfinder_path, '-d', domain, '-silent']
-        result = subprocess.run(command, capture_output=True, text=True, timeout=300)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=120)
         
         subdomains = set(result.stdout.splitlines())
         if subdomains:

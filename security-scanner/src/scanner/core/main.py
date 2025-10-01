@@ -8,12 +8,13 @@ import os
 import json
 import zipfile
 import logging
+import socket
 from datetime import datetime
 from collections import defaultdict
 
-# Импортируем наши модули
-import config
-from utils import (
+# Импорты модулей
+from . import config
+from .utils import (
     setup_logging, 
     send_telegram_message, 
     send_telegram_file,
@@ -21,14 +22,14 @@ from utils import (
     format_timestamp,
     get_emoji_for_vuln_count
 )
-from scanner import (
+from .scanner import (
     get_subdomains,
     scan_ports,
     scan_vulnerabilities,
     parse_open_ports,
     count_vulnerabilities_by_severity
 )
-from report import generate_html_report_v3
+from .report import generate_html_report_v3
 
 def process_domain(domain):
     """Обработка одного домена"""
@@ -39,7 +40,7 @@ def process_domain(domain):
     all_subdomains_file = os.path.join(config.DATA_DIR, f"{domain}_all_subdomains.json")
     active_subdomains_file = os.path.join(config.DATA_DIR, f"{domain}_active_subdomains.json")
     
-    # Загружаем предыдущие данные
+    # Загрузка предыдущих данных
     if os.path.exists(all_subdomains_file):
         with open(all_subdomains_file, 'r') as f:
             previous_all_subdomains = set(json.load(f))
@@ -79,6 +80,13 @@ def process_domain(domain):
     accessible_subdomains_info = []
     total_vulns = 0
     vuln_by_severity = defaultdict(int)
+    
+    def get_ip_address(subdomain):
+        """Получить IP адрес для поддомена"""
+        try:
+            return socket.gethostbyname(subdomain)
+        except socket.gaierror:
+            return None
     
     if not current_subdomains:
         print(f"   ⚠️  Субдомены не найдены для {domain}")
@@ -124,10 +132,14 @@ def process_domain(domain):
             for vuln in vulnerabilities:
                 vuln_by_severity[vuln['severity'].lower()] += 1
             
+            # Получаем IP адрес для геолокации
+            ip_address = get_ip_address(subdomain)
+            
             accessible_subdomains_info.append({
-                'subdomain': subdomain,
+                'name': subdomain,
+                'ip': ip_address,
                 'port_scan_result': port_scan_result,
-                'open_ports': open_ports,
+                'ports': open_ports,
                 'vulnerabilities': vulnerabilities
             })
         else:
@@ -177,11 +189,12 @@ def process_domain(domain):
         'domain': domain,
         'total_subdomains': len(current_subdomains_set),
         'active_subdomains': len(current_active_subdomains),
-        'new_active_subdomains': new_active_subdomains,
-        'lost_active_subdomains': lost_active_subdomains,
+        'new_active_subdomains': list(new_active_subdomains),
+        'lost_active_subdomains': list(lost_active_subdomains),
         'total_vulnerabilities': total_vulns,
         'vulnerability_stats': f"{vuln_by_severity.get('critical', 0)} критических, {vuln_by_severity.get('high', 0)} высоких, {vuln_by_severity.get('medium', 0)} средних",
-        'html_report': html_report
+        'html_report': html_report,
+        'accessible_subdomains_info': accessible_subdomains_info
     }
 
 def generate_and_send_reports(domains):
@@ -290,7 +303,7 @@ def main():
         print(f"   • {domain}")
     print("="*60)
     
-    # Настройка логирования
+    # Логирование
     setup_logging(config.LOG_FILE, config.LOG_LEVEL)
     
     try:

@@ -1,0 +1,53 @@
+FROM python:3.11-slim
+
+# Системные зависимости
+RUN apt-get update && apt-get install -y \
+    nmap \
+    wget \
+    unzip \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Установка Go
+RUN wget https://go.dev/dl/go1.21.5.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz \
+    && rm go1.21.5.linux-amd64.tar.gz
+
+# PATH для Go
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+# Subfinder
+RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+
+# Nuclei
+RUN go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+
+# Копирование бинарников
+RUN cp /root/go/bin/subfinder /usr/local/bin/ \
+    && cp /root/go/bin/nuclei /usr/local/bin/
+
+# Пользователь для безопасности
+RUN useradd -m -u 1000 scanner
+
+# Рабочая директория
+WORKDIR /app
+
+# Python зависимости
+COPY src/web/backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Код приложения
+COPY src/ .
+
+# Директории
+RUN mkdir -p data reports logs \
+    && chown -R scanner:scanner /app
+
+# Пользователь scanner
+USER scanner
+
+# Порт
+EXPOSE 8000
+
+# Запуск
+CMD ["uvicorn", "web.backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
